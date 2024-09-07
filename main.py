@@ -5,33 +5,36 @@ import numpy as np
 import tensorflow as tf
 import streamlit as st
 
-working_dir = "G:/Plant Disease Detection"
-model_path = os.path.join(working_dir, "plant_disease_prediction_model.h5")
+# Use relative paths for deployment
+model_path = "plant_disease_prediction_model.h5"
 
+# Check if model file exists
 if not os.path.exists(model_path):
-    st.error(f"Model file not found at {model_path}. Please check the path and ensure the file exists.")
+    st.error(f"Model file not found. Please ensure the file exists.")
     st.stop()
 
+# Load the model
 model = tf.keras.models.load_model(model_path)
 
-class_indices_path = os.path.join(working_dir, "class_indices.json")
+# Load class indices
+class_indices_path = "class_indices.json"
 if not os.path.exists(class_indices_path):
-    st.error(f"Class indices file not found at {class_indices_path}. Please check the path and ensure the file exists.")
+    st.error(f"Class indices file not found. Please ensure the file exists.")
     st.stop()
 
 with open(class_indices_path, 'r') as f:
     class_indices = json.load(f)
 
-def load_and_preprocess_image(image_path, target_size=(224, 224)):
-    img = Image.open(image_path)
+def load_and_preprocess_image(image, target_size=(224, 224)):
+    img = Image.open(image)
     img = img.resize(target_size)
     img_array = np.array(img)
     img_array = np.expand_dims(img_array, axis=0)
-    img_array = img_array.astype('float32') / 255.
+    img_array = img_array.astype('float32') / 255.0
     return img_array
 
-def predict_image_class(model, image_path, class_indices):
-    preprocessed_img = load_and_preprocess_image(image_path)
+def predict_image_class(model, image, class_indices):
+    preprocessed_img = load_and_preprocess_image(image)
     predictions = model.predict(preprocessed_img)
     predicted_class_index = np.argmax(predictions, axis=1)[0]
     predicted_class_name = class_indices.get(str(predicted_class_index), "Unknown class")
